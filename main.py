@@ -34,7 +34,21 @@ BEETS_CONFIG      = os.environ.get("BEETS_CONFIG", "/config/beets/config.yaml")
 
 app = FastAPI(title="Dropzone")
 security = HTTPBasic()
-templates = Jinja2Templates(directory="/app/templates")
+templates = Jinja2Templates(directory="/app")
+
+@app.on_event("startup")
+async def startup_checks():
+    """Verify required directories and configuration files exist."""
+    # Ensure upload directories exist
+    ensure_dirs()
+    
+    # Ensure beets library directory exists
+    beets_config_path = Path(BEETS_CONFIG)
+    beets_lib_dir = beets_config_path.parent.parent / "beets"
+    beets_lib_dir.mkdir(parents=True, exist_ok=True)
+    
+    if not beets_config_path.exists():
+        raise RuntimeError(f"Beets config file does not exist: {beets_config_path}")
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -81,7 +95,7 @@ def import_music_with_beets(source_dir: Path) -> tuple[bool, str]:
     """Run beets import on a directory."""
     try:
         result = subprocess.run(
-            ["beet", "--config", BEETS_CONFIG, "import", "--timid", str(source_dir)],
+            ["beet", "--config", BEETS_CONFIG, "import", str(source_dir)],
             capture_output=True,
             text=True,
             timeout=300,
@@ -143,9 +157,14 @@ async def upload(
                 return JSONResponse({"ok": False, "message": msg})
 
             scan_ok, scan_msg = navidrome_rescan()
+            final_msg = msg
+            if scan_ok:
+                final_msg += f"\n{scan_msg}"
+            else:
+                final_msg += f"\n(Navidrome rescan skipped: {scan_msg})"
             return JSONResponse({
                 "ok": True,
-                "message": f"{msg}\n{scan_msg}",
+                "message": final_msg,
             })
 
     elif workflow == "books":

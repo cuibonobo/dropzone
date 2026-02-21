@@ -1,13 +1,14 @@
 # beets configuration for dropzone
 # Place this at the path set in BEETS_CONFIG (default: /config/beets/config.yaml)
 
-directory: /data/music        # must match MUSIC_DIR
-library: /config/beets/library.db
+directory: /app/instance/music        # must match MUSIC_DIR
+library: /app/instance/beets/library.db
 
 import:
   move: yes                   # move files instead of copying
   write: yes                  # write tags to files
-  log: /config/beets/import.log
+  log: /app/instance/beets/import.log
+  autotag: no                 # disable auto-tagging to avoid interactive prompts
 
 # Timid mode: only auto-accept high-confidence matches.
 # Lower-confidence matches are skipped and logged rather than guessed.
@@ -16,17 +17,7 @@ match:
   medium_rec_thresh: 0.25
   # Items below medium_rec_thresh will be skipped in timid mode.
 
-plugins:
-  - fetchart
-  - embedart
-  - chroma        # acoustic fingerprinting — more accurate matching
-                  # requires: apt install chromaprint / pip install pyacoustid
-
-fetchart:
-  auto: yes
-
-embedart:
-  auto: yes
+plugins: []
 
 # File path template: Artist/Album/Track. Artist.mp3
 paths:

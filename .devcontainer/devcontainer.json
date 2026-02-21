@@ -1,0 +1,32 @@
+{
+  "name": "Dropzone Dev",
+  "build": {
+    "context": "..",
+    "dockerfile": "../Dockerfile"
+  },
+  "workspaceMount": "source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached",
+  "workspaceFolder": "/app",
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+  "forwardPorts": [8000],
+  "remoteEnv": {
+    "DROPZONE_USER": "admin",
+    "DROPZONE_PASSWORD": "dev",
+    "MUSIC_DIR": "/app/instance/music",
+    "BOOKS_DIR": "/app/instance/books",
+    "INBOX_DIR": "/app/instance/inbox",
+    "SNIPPETS_FILE": "/app/instance/snippets/snippets.txt",
+    "BEETS_CONFIG": "/app/beets-config.yaml"
+  },
+  "postCreateCommand": "mkdir -p /app/instance/{music,books,inbox,snippets,beets}",
+  "postStartCommand": "uvicorn main:app --host 0.0.0.0 --port 8000 --reload",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance"
+      ]
+    }
+  }
+}
