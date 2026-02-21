@@ -1,0 +1,41 @@
+services:
+  dropzone:
+    image: ghcr.io/cuibonobo/dropzone:latest
+    # build: .   # uncomment to build locally instead
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # Auth
+      DROPZONE_USER: admin
+      DROPZONE_PASSWORD: changeme   # ← change this!
+
+      # Destinations (adjust to your host paths as mounted below)
+      MUSIC_DIR: /data/music
+      BOOKS_DIR: /data/books
+      INBOX_DIR: /data/inbox
+      SNIPPETS_FILE: /data/snippets/snippets.txt
+
+      # Navidrome
+      NAVIDROME_URL: http://navidrome:4533
+      NAVIDROME_USER: admin
+      NAVIDROME_PASSWORD: ""
+
+      # Beets config path inside container
+      BEETS_CONFIG: /config/beets/config.yaml
+
+    volumes:
+      # Mount host paths for each destination
+      - /path/to/music:/data/music          # ← set your host path
+      - /path/to/books:/data/books          # ← set your host path
+      - /path/to/inbox:/data/inbox          # ← set your host path
+      - /path/to/snippets:/data/snippets    # ← set your host path
+      - /path/to/beets/config:/config/beets # ← set your host path
+
+    networks:
+      - media
+
+networks:
+  media:
+    external: true   # assumes your Navidrome is on a shared Docker network called "media"
+                     # adjust or remove if your setup differs

@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dropzone</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0e0e0e;
+      --surface:  #181818;
+      --border:   #2a2a2a;
+      --accent:   #d4f000;
+      --accent2:  #00f0a0;
+      --text:     #e8e8e8;
+      --muted:    #666;
+      --danger:   #ff4444;
+      --radius:   4px;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 48px 16px;
+      min-height: 100vh;
+    }
+
+    header {
+      width: 100%;
+      max-width: 560px;
+      margin-bottom: 40px;
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2rem, 8vw, 3.5rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      color: var(--accent);
+    }
+
+    h1 span {
+      color: var(--text);
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin-top: 6px;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 560px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+    }
+
+    /* Workflow tabs */
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-bottom: 28px;
+    }
+
+    .tab {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 10px 4px;
+      cursor: pointer;
+      border-radius: var(--radius);
+      transition: all 0.15s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tab:hover { border-color: var(--accent); color: var(--text); }
+
+    .tab.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(212,240,0,0.06);
+    }
+
+    .tab svg { width: 18px; height: 18px; stroke-width: 1.5; }
+
+    /* Drop area */
+    #drop-area {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    #drop-area:hover, #drop-area.dragover {
+      border-color: var(--accent);
+      background: rgba(212,240,0,0.03);
+    }
+
+    #drop-area input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .drop-icon {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .drop-label {
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    #file-name {
+      margin-top: 8px;
+      color: var(--accent2);
+      font-size: 11px;
+      min-height: 16px;
+      word-break: break-all;
+    }
+
+    /* Text panel */
+    #text-panel { display: none; }
+
+    textarea {
+      width: 100%;
+      height: 140px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      padding: 14px;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    textarea:focus { border-color: var(--accent); }
+    textarea::placeholder { color: var(--muted); }
+
+    /* Accept note */
+    .accept-note {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 8px;
+      letter-spacing: 0.04em;
+    }
+
+    /* Submit button */
+    button[type="submit"] {
+      width: 100%;
+      margin-top: 20px;
+      padding: 14px;
+      background: var(--accent);
+      color: #0e0e0e;
+      border: none;
+      border-radius: var(--radius);
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    button[type="submit"]:hover { opacity: 0.88; }
+    button[type="submit"]:active { transform: scale(0.99); }
+    button[type="submit"]:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Status */
+    #status {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: var(--radius);
+      font-size: 12px;
+      line-height: 1.6;
+      display: none;
+      white-space: pre-wrap;
+    }
+
+    #status.ok   { background: rgba(0,240,160,0.08); border: 1px solid var(--accent2); color: var(--accent2); }
+    #status.err  { background: rgba(255,68,68,0.08);  border: 1px solid var(--danger);  color: var(--danger); }
+
+    /* Progress bar */
+    #progress-wrap {
+      margin-top: 16px;
+      display: none;
+      height: 3px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    #progress-bar {
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      transition: width 0.3s;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Drop<span>zone</span></h1>
+    <p class="subtitle">File dispatch &amp; automation</p>
+  </header>
+
+  <div class="card">
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-workflow="music" type="button" role="tab">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M12 3v6M12 15v6M3 12h6M15 12h6"/><circle cx="12" cy="12" r="9"/></svg>
+        Music
+      </button>
+      <button class="tab" data-workflow="books" type="button" role="tab">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        Books
+      </button>
+      <button class="tab" data-workflow="inbox" type="button" role="tab">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 17.76 4H6.24a2 2 0 0 0-1.79 1.11z"/></svg>
+        Inbox
+      </button>
+      <button class="tab" data-workflow="text" type="button" role="tab">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
+        Text
+      </button>
+    </div>
+
+    <form id="upload-form">
+      <input type="hidden" name="workflow" id="workflow-input" value="music" />
+
+      <div id="file-panel">
+        <div id="drop-area">
+          <input type="file" name="file" id="file-input" />
+          <span class="drop-icon">⬆</span>
+          <div class="drop-label">Drop file or click to browse</div>
+          <div id="file-name"></div>
+        </div>
+        <div class="accept-note" id="accept-note">Accepts: .zip</div>
+      </div>
+
+      <div id="text-panel">
+        <textarea name="text" id="text-input" placeholder="Paste your text snippet here…"></textarea>
+      </div>
+
+      <div id="progress-wrap"><div id="progress-bar"></div></div>
+
+      <button type="submit" id="submit-btn">Send</button>
+      <div id="status"></div>
+    </form>
+  </div>
+
+  <script>
+    const workflows = {
+      music: { label: 'Send to Navidrome',  accepts: '.zip',            file: true  },
+      books: { label: 'Send to Books',      accepts: '.epub,.pdf,.mobi', file: true  },
+      inbox: { label: 'Send to Inbox',      accepts: '*',               file: true  },
+      text:  { label: 'Append Snippet',     accepts: null,              file: false },
+    };
+
+    let current = 'music';
+
+    const tabs       = document.querySelectorAll('.tab');
+    const filePanel  = document.getElementById('file-panel');
+    const textPanel  = document.getElementById('text-panel');
+    const fileInput  = document.getElementById('file-input');
+    const fileName   = document.getElementById('file-name');
+    const acceptNote = document.getElementById('accept-note');
+    const submitBtn  = document.getElementById('submit-btn');
+    const workflowIn = document.getElementById('workflow-input');
+    const dropArea   = document.getElementById('drop-area');
+    const status     = document.getElementById('status');
+    const progressW  = document.getElementById('progress-wrap');
+    const progressB  = document.getElementById('progress-bar');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        current = tab.dataset.workflow;
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        workflowIn.value = current;
+
+        const wf = workflows[current];
+        submitBtn.textContent = wf.label;
+
+        if (wf.file) {
+          filePanel.style.display = '';
+          textPanel.style.display = 'none';
+          fileInput.accept = wf.accepts;
+          acceptNote.textContent = wf.accepts === '*' ? 'Accepts: any file' : `Accepts: ${wf.accepts}`;
+        } else {
+          filePanel.style.display = 'none';
+          textPanel.style.display = '';
+        }
+
+        clearStatus();
+        fileName.textContent = '';
+      });
+    });
+
+    fileInput.addEventListener('change', () => {
+      fileName.textContent = fileInput.files[0]?.name || '';
+    });
+
+    dropArea.addEventListener('dragover', e => { e.preventDefault(); dropArea.classList.add('dragover'); });
+    dropArea.addEventListener('dragleave', () => dropArea.classList.remove('dragover'));
+    dropArea.addEventListener('drop', e => {
+      e.preventDefault();
+      dropArea.classList.remove('dragover');
+      if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        fileName.textContent = fileInput.files[0].name;
+      }
+    });
+
+    function clearStatus() {
+      status.style.display = 'none';
+      status.className = '';
+      status.textContent = '';
+    }
+
+    function showStatus(ok, msg) {
+      status.style.display = 'block';
+      status.className = ok ? 'ok' : 'err';
+      status.textContent = (ok ? '✓ ' : '✗ ') + msg;
+    }
+
+    document.getElementById('upload-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      clearStatus();
+
+      const wf = workflows[current];
+
+      if (wf.file && !fileInput.files.length) {
+        showStatus(false, 'Please select a file.');
+        return;
+      }
+      if (!wf.file && !document.getElementById('text-input').value.trim()) {
+        showStatus(false, 'Please enter some text.');
+        return;
+      }
+
+      const formData = new FormData(e.target);
+      submitBtn.disabled = true;
+      progressW.style.display = 'block';
+      progressB.style.width = '30%';
+
+      try {
+        progressB.style.width = '60%';
+        const resp = await fetch('/upload', { method: 'POST', body: formData });
+        progressB.style.width = '100%';
+        const data = await resp.json();
+        showStatus(data.ok, data.message);
+        if (data.ok) {
+          fileInput.value = '';
+          fileName.textContent = '';
+          if (!wf.file) document.getElementById('text-input').value = '';
+        }
+      } catch (err) {
+        showStatus(false, 'Network error: ' + err.message);
+      } finally {
+        submitBtn.disabled = false;
+        setTimeout(() => {
+          progressW.style.display = 'none';
+          progressB.style.width = '0%';
+        }, 600);
+      }
+    });
+  </script>
+</body>
+</html>
