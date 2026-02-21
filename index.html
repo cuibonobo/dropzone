@@ -322,13 +322,13 @@
         submitBtn.textContent = wf.label;
 
         if (wf.file) {
-          filePanel.style.display = '';
+          filePanel.style.display = 'block';
           textPanel.style.display = 'none';
           fileInput.accept = wf.accepts;
           acceptNote.textContent = wf.accepts === '*' ? 'Accepts: any file' : `Accepts: ${wf.accepts}`;
         } else {
           filePanel.style.display = 'none';
-          textPanel.style.display = '';
+          textPanel.style.display = 'block';
         }
 
         clearStatus();

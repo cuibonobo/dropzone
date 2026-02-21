@@ -131,7 +131,7 @@ async def upload(
             return JSONResponse({"ok": False, "message": "No text provided."}, status_code=400)
         with SNIPPETS_FILE.open("a", encoding="utf-8") as f:
             f.write(text.strip() + "\n\n---\n\n")
-        return JSONResponse({"ok": True, "message": f"Appended to {SNIPPETS_FILE}."})
+        return JSONResponse({"ok": True, "message": "Text snippet appended successfully."})
 
     if not file:
         return JSONResponse({"ok": False, "message": "No file provided."}, status_code=400)
@@ -157,27 +157,33 @@ async def upload(
                 return JSONResponse({"ok": False, "message": msg})
 
             scan_ok, scan_msg = navidrome_rescan()
-            final_msg = msg
+            final_msg = "Music imported successfully."
             if scan_ok:
-                final_msg += f"\n{scan_msg}"
-            else:
-                final_msg += f"\n(Navidrome rescan skipped: {scan_msg})"
+                final_msg = "Music imported successfully. Navidrome rescan triggered."
             return JSONResponse({
                 "ok": True,
                 "message": final_msg,
             })
 
     elif workflow == "books":
-        dest = BOOKS_DIR / filename
-        with dest.open("wb") as f:
-            shutil.copyfileobj(file.file, f)
-        return JSONResponse({"ok": True, "message": f"Saved to {dest}."})
+        try:
+            dest = BOOKS_DIR / filename
+            file_content = await file.read()
+            with dest.open("wb") as f:
+                f.write(file_content)
+            return JSONResponse({"ok": True, "message": "Book uploaded successfully."})
+        except Exception as e:
+            return JSONResponse({"ok": False, "message": f"Error saving book: {e}"}, status_code=500)
 
     elif workflow == "inbox":
-        dest = INBOX_DIR / filename
-        with dest.open("wb") as f:
-            shutil.copyfileobj(file.file, f)
-        return JSONResponse({"ok": True, "message": f"Saved to {dest}."})
+        try:
+            dest = INBOX_DIR / filename
+            file_content = await file.read()
+            with dest.open("wb") as f:
+                f.write(file_content)
+            return JSONResponse({"ok": True, "message": "File uploaded successfully."})
+        except Exception as e:
+            return JSONResponse({"ok": False, "message": f"Error saving to inbox: {e}"}, status_code=500)
 
     else:
         return JSONResponse({"ok": False, "message": f"Unknown workflow: {workflow}"}, status_code=400)
