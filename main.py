@@ -6,6 +6,8 @@ import tempfile
 import subprocess
 from pathlib import Path
 from typing import Annotated
+from datetime import datetime
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import httpx
 from fastapi import FastAPI, File, UploadFile, Form, Depends, HTTPException, status, Request
@@ -29,6 +31,8 @@ NAVIDROME_USER    = os.environ.get("NAVIDROME_USER", "admin")
 NAVIDROME_PASSWORD= os.environ.get("NAVIDROME_PASSWORD", "")
 
 BEETS_CONFIG      = os.environ.get("BEETS_CONFIG", "/config/beets/config.yaml")
+
+TIMEZONE          = os.environ.get("TIMEZONE", "America/New_York")
 
 # ── App setup ─────────────────────────────────────────────────────────────────
 
@@ -129,8 +133,13 @@ async def upload(
     if workflow == "text":
         if not text:
             return JSONResponse({"ok": False, "message": "No text provided."}, status_code=400)
+        try:
+            tz = ZoneInfo(TIMEZONE)
+        except ZoneInfoNotFoundError:
+            tz = ZoneInfo("UTC")
+        timestamp = datetime.now(tz).replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S %Z")
         with SNIPPETS_FILE.open("a", encoding="utf-8") as f:
-            f.write(text.strip() + "\n\n---\n\n")
+            f.write(text.strip() + "\n\n" + timestamp + "\n---\n\n")
         return JSONResponse({"ok": True, "message": "Text snippet appended successfully."})
 
     if not file:

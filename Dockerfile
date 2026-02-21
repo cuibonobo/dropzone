@@ -1,5 +1,8 @@
 FROM python:3.12-slim
 
+# Default timezone used by the app (IANA name)
+ENV TIMEZONE=America/New_York
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
