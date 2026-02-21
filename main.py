@@ -9,7 +9,7 @@ from typing import Annotated
 
 import httpx
 from fastapi import FastAPI, File, UploadFile, Form, Depends, HTTPException, status, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -191,3 +191,7 @@ async def upload(
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+@app.get("/favicon.svg")
+async def favicon():
+    return FileResponse("/app/favicon.svg", media_type="image/svg+xml")
