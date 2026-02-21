@@ -1,13 +1,13 @@
 # beets configuration for dropzone
 # Place this at the path set in BEETS_CONFIG (default: /config/beets/config.yaml)
 
-directory: /app/instance/music        # must match MUSIC_DIR
-library: /app/instance/beets/library.db
+directory: ${MUSIC_DIR}
+library: ${BEETS_DIR}/library.db
 
 import:
   move: yes                   # move files instead of copying
   write: yes                  # write tags to files
-  log: /app/instance/beets/import.log
+  log: ${BEETS_DIR}/import.log
   autotag: no                 # disable auto-tagging to avoid interactive prompts
 
 # Timid mode: only auto-accept high-confidence matches.
@@ -21,6 +21,6 @@ plugins: []
 
 # File path template: Artist/Album/Track. Artist.mp3
 paths:
-  default: $albumartist/$album/$track. $title
+  default: $albumartist/$album/$track $title
   singleton: Non-Album/$artist/$title
-  comp: Compilations/$album/$track. $title
+  comp: Compilations/$album/$track $title

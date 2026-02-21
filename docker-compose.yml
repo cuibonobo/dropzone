@@ -2,6 +2,7 @@ services:
   dropzone:
     image: ghcr.io/cuibonobo/dropzone:latest
     # build: .   # uncomment to build locally instead
+    container_name: dropzone
     restart: unless-stopped
     ports:
       - "8000:8000"
@@ -23,6 +24,7 @@ services:
 
       # Beets config path inside container
       BEETS_CONFIG: /config/beets/config.yaml
+      BEETS_DIR: /config/beets
 
     volumes:
       # Mount host paths for each destination
