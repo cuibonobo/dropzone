@@ -101,6 +101,7 @@ def import_music_with_beets(source_dir: Path) -> tuple[bool, str]:
         result = subprocess.run(
             ["beet", "--config", BEETS_CONFIG, "import", str(source_dir)],
             capture_output=True,
+            stdin=subprocess.DEVNULL,
             text=True,
             timeout=300,
         )
