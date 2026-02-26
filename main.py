@@ -33,6 +33,9 @@ NAVIDROME_PASSWORD= os.environ.get("NAVIDROME_PASSWORD", "")
 BEETS_DIR         = os.environ.get("BEETS_DIR", "/config/beets")
 BEETS_CONFIG      = os.environ.get("BEETS_CONFIG", f"{BEETS_DIR}/config.yaml")
 
+PUID              = int(os.environ["PUID"]) if os.environ.get("PUID") else None
+PGID              = int(os.environ["PGID"]) if os.environ.get("PGID") else None
+
 TIMEZONE          = os.environ.get("TIMEZONE", "America/New_York")
 
 # ── App setup ─────────────────────────────────────────────────────────────────
@@ -93,6 +96,18 @@ def navidrome_rescan():
         return True, "Navidrome rescan triggered."
     except Exception as e:
         return False, f"Navidrome rescan failed: {e}"
+
+def chown_music_dir() -> tuple[bool, str]:
+    """Recursively chown MUSIC_DIR to PUID:PGID if configured."""
+    if PUID is None or PGID is None:
+        return True, ""
+    try:
+        os.chown(MUSIC_DIR, PUID, PGID)
+        for item in MUSIC_DIR.rglob("*"):
+            os.chown(item, PUID, PGID)
+        return True, ""
+    except OSError as e:
+        return False, f"Warning: could not chown music files: {e}"
 
 def import_music_with_beets(source_dir: Path) -> tuple[bool, str]:
     """Run beets import on a directory."""
@@ -182,6 +197,8 @@ async def upload(
             ok, msg = import_music_with_beets(extract_dir)
             if not ok:
                 return JSONResponse({"ok": False, "message": msg})
+
+            chown_music_dir()
 
             scan_ok, scan_msg = navidrome_rescan()
             final_msg = "Music imported successfully."

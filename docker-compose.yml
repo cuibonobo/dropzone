@@ -27,6 +27,9 @@ services:
       BEETS_DIR: /config/beets
       # Timezone for snippet timestamps (IANA zone name)
       TIMEZONE: America/New_York
+      # Optional: chown imported music files to this user/group (use `id -u` / `id -g`)
+      # PUID: 1000
+      # PGID: 1000
 
     volumes:
       # Mount host paths for each destination
