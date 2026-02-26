@@ -30,7 +30,8 @@ NAVIDROME_URL     = os.environ.get("NAVIDROME_URL", "http://navidrome:4533")
 NAVIDROME_USER    = os.environ.get("NAVIDROME_USER", "admin")
 NAVIDROME_PASSWORD= os.environ.get("NAVIDROME_PASSWORD", "")
 
-BEETS_CONFIG      = os.environ.get("BEETS_CONFIG", "/config/beets/config.yaml")
+BEETS_DIR         = os.environ.get("BEETS_DIR", "/config/beets")
+BEETS_CONFIG      = os.environ.get("BEETS_CONFIG", f"{BEETS_DIR}/config.yaml")
 
 TIMEZONE          = os.environ.get("TIMEZONE", "America/New_York")
 
@@ -47,12 +48,10 @@ async def startup_checks():
     ensure_dirs()
     
     # Ensure beets library directory exists
-    beets_config_path = Path(BEETS_CONFIG)
-    beets_lib_dir = beets_config_path.parent.parent / "beets"
-    beets_lib_dir.mkdir(parents=True, exist_ok=True)
+    Path(BEETS_DIR).mkdir(parents=True, exist_ok=True)
     
-    if not beets_config_path.exists():
-        raise RuntimeError(f"Beets config file does not exist: {beets_config_path}")
+    if not Path(BEETS_CONFIG).exists():
+        raise RuntimeError(f"Beets config file does not exist: {BEETS_CONFIG}")
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -97,9 +96,20 @@ def navidrome_rescan():
 
 def import_music_with_beets(source_dir: Path) -> tuple[bool, str]:
     """Run beets import on a directory."""
+    # beets does not reliably expand ${VAR} in config path values when the
+    # variables aren't set in its environment.  Substitute them here in Python
+    # and pass a resolved temporary config file so the paths are always literal.
+    resolved_config = None
     try:
+        with open(BEETS_CONFIG) as f:
+            raw = f.read()
+        resolved = raw.replace("${BEETS_DIR}", BEETS_DIR).replace("${MUSIC_DIR}", str(MUSIC_DIR))
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as tmp:
+            tmp.write(resolved)
+            resolved_config = tmp.name
+
         result = subprocess.run(
-            ["beet", "--config", BEETS_CONFIG, "import", str(source_dir)],
+            ["beet", "--config", resolved_config, "import", "-q", str(source_dir)],
             capture_output=True,
             stdin=subprocess.DEVNULL,
             text=True,
@@ -108,13 +118,20 @@ def import_music_with_beets(source_dir: Path) -> tuple[bool, str]:
         if result.returncode == 0:
             return True, result.stdout or "Beets import complete."
         else:
-            return False, result.stderr or "Beets import failed."
+            detail = "\n".join(filter(None, [result.stderr, result.stdout]))
+            return False, detail or "Beets import failed."
     except FileNotFoundError:
         return False, "beets not found — is it installed in the container?"
     except subprocess.TimeoutExpired:
         return False, "Beets import timed out after 5 minutes."
     except Exception as e:
         return False, str(e)
+    finally:
+        if resolved_config:
+            try:
+                os.unlink(resolved_config)
+            except OSError:
+                pass
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 
