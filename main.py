@@ -22,7 +22,6 @@ DROPZONE_USER     = os.environ.get("DROPZONE_USER", "admin")
 DROPZONE_PASSWORD = os.environ.get("DROPZONE_PASSWORD", "changeme")
 
 MUSIC_DIR         = Path(os.environ.get("MUSIC_DIR", "/data/music"))
-BOOKS_DIR         = Path(os.environ.get("BOOKS_DIR", "/data/books"))
 INBOX_DIR         = Path(os.environ.get("INBOX_DIR", "/data/inbox"))
 SNIPPETS_FILE     = Path(os.environ.get("SNIPPETS_FILE", "/data/snippets.txt"))
 
@@ -79,7 +78,7 @@ Auth = Annotated[str, Depends(require_auth)]
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def ensure_dirs():
-    for d in [MUSIC_DIR, BOOKS_DIR, INBOX_DIR]:
+    for d in [MUSIC_DIR, INBOX_DIR]:
         d.mkdir(parents=True, exist_ok=True)
     SNIPPETS_FILE.parent.mkdir(parents=True, exist_ok=True)
 
@@ -236,16 +235,6 @@ async def upload(
                 "ok": True,
                 "message": final_msg,
             })
-
-    elif workflow == "books":
-        try:
-            dest = BOOKS_DIR / filename
-            file_content = await file.read()
-            with dest.open("wb") as f:
-                f.write(file_content)
-            return JSONResponse({"ok": True, "message": "Book uploaded successfully."})
-        except Exception as e:
-            return JSONResponse({"ok": False, "message": f"Error saving book: {e}"}, status_code=500)
 
     elif workflow == "inbox":
         try:

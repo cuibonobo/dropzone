@@ -8,7 +8,6 @@ your home server workflows. Built with FastAPI.
 | Tab | Input | Action |
 |-----|-------|--------|
 | Music | `.zip` | Extract → beets import (auto-tag + organize) → Navidrome rescan |
-| Books | `.epub`, `.pdf`, `.mobi` | Copy to books folder |
 | Inbox | Any file | Copy to inbox folder (sync to desktop via Syncthing) |
 | Text | Text snippet | Append to a text file |
 
@@ -19,7 +18,7 @@ your home server workflows. Built with FastAPI.
 Copy `docker-compose.yml` and fill in:
 
 - `DROPZONE_PASSWORD` — use a strong password, this is internet-facing
-- Volume paths — map your host directories to the container paths
+- Volume paths — map your host directories to the container paths (music, inbox, snippets, beets config)
 - `NAVIDROME_URL` / `NAVIDROME_USER` / `NAVIDROME_PASSWORD`
 - **Optional:** `PUID` / `PGID` — if set, beets runs as this user/group so
   imported files are owned by that user from the start. Use `id -u` / `id -g`

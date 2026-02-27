@@ -14,7 +14,6 @@
     "DROPZONE_USER": "admin",
     "DROPZONE_PASSWORD": "dev",
     "MUSIC_DIR": "/app/instance/music",
-    "BOOKS_DIR": "/app/instance/books",
     "INBOX_DIR": "/app/instance/inbox",
     "SNIPPETS_FILE": "/app/instance/snippets/snippets.txt",
     "BEETS_CONFIG": "/app/beets-config.yaml",
@@ -23,7 +22,7 @@
     "PUID": "1000",
     "PGID": "1000"
   },
-  "postCreateCommand": "mkdir -p /app/instance/music /app/instance/books /app/instance/inbox /app/instance/snippets /app/instance/beets",
+  "postCreateCommand": "mkdir -p /app/instance/music /app/instance/inbox /app/instance/snippets /app/instance/beets",
   "postStartCommand": "uvicorn main:app --host 0.0.0.0 --port 8000 --reload",
   "customizations": {
     "vscode": {

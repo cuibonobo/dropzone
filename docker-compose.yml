@@ -13,7 +13,6 @@ services:
 
       # Destinations (adjust to your host paths as mounted below)
       MUSIC_DIR: /data/music
-      BOOKS_DIR: /data/books
       INBOX_DIR: /data/inbox
       SNIPPETS_FILE: /data/snippets/snippets.txt
 
@@ -34,7 +33,6 @@ services:
     volumes:
       # Mount host paths for each destination
       - /path/to/music:/data/music          # ← set your host path
-      - /path/to/books:/data/books          # ← set your host path
       - /path/to/inbox:/data/inbox          # ← set your host path
       - /path/to/snippets:/data/snippets    # ← set your host path
       - /path/to/beets/config:/config/beets # ← set your host path
