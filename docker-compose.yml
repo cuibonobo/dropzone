@@ -36,3 +36,12 @@ services:
       - /path/to/inbox:/data/inbox          # ← set your host path
       - /path/to/snippets:/data/snippets    # ← set your host path
       - /path/to/beets/config:/config/beets # ← set your host path
+
+    networks:
+      - default
+      - navidrome_net
+
+networks:
+  navidrome_net:
+    external: true
+    name: docker_default   # ← the Docker network your Navidrome container is on
