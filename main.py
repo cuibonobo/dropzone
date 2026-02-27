@@ -49,10 +49,15 @@ async def startup_checks():
     """Verify required directories and configuration files exist."""
     # Ensure upload directories exist
     ensure_dirs()
-    
+
+    # If running beets as an unprivileged user, MUSIC_DIR must be owned by
+    # that user so beets can create subdirectories and move files into it.
+    if PUID is not None and PGID is not None:
+        os.chown(MUSIC_DIR, PUID, PGID)
+
     # Ensure beets library directory exists
     Path(BEETS_DIR).mkdir(parents=True, exist_ok=True)
-    
+
     if not Path(BEETS_CONFIG).exists():
         raise RuntimeError(f"Beets config file does not exist: {BEETS_CONFIG}")
 
@@ -97,24 +102,26 @@ def navidrome_rescan():
     except Exception as e:
         return False, f"Navidrome rescan failed: {e}"
 
-def chown_music_dir() -> tuple[bool, str]:
-    """Recursively chown MUSIC_DIR to PUID:PGID if configured."""
-    if PUID is None or PGID is None:
-        return True, ""
-    try:
-        os.chown(MUSIC_DIR, PUID, PGID)
-        for item in MUSIC_DIR.rglob("*"):
-            os.chown(item, PUID, PGID)
-        return True, ""
-    except OSError as e:
-        return False, f"Warning: could not chown music files: {e}"
-
 def import_music_with_beets(source_dir: Path) -> tuple[bool, str]:
     """Run beets import on a directory."""
     # beets does not reliably expand ${VAR} in config path values when the
     # variables aren't set in its environment.  Substitute them here in Python
     # and pass a resolved temporary config file so the paths are always literal.
     resolved_config = None
+    preexec: None | callable = None
+    if PUID is not None and PGID is not None:
+        def _drop_privs():  # type: ignore
+            try:
+                os.setgid(PGID)
+                os.setuid(PUID)
+            except OSError:
+                # if we can't change to the requested user (for example the
+                # current process isn't root) just continue; beets will run
+                # as whatever user launched the container and the caller can
+                # still chown whatever is necessary afterwards.
+                pass
+        preexec = _drop_privs
+
     try:
         with open(BEETS_CONFIG) as f:
             raw = f.read()
@@ -122,6 +129,14 @@ def import_music_with_beets(source_dir: Path) -> tuple[bool, str]:
         with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as tmp:
             tmp.write(resolved)
             resolved_config = tmp.name
+        os.chmod(resolved_config, 0o644)
+
+        env = os.environ.copy()
+        if PUID is not None and PGID is not None:
+            # After setuid, HOME is still /root which the unprivileged user
+            # can't write to. Point it somewhere writable so beets/confuse
+            # doesn't fail trying to create a config directory there.
+            env["HOME"] = "/tmp"
 
         result = subprocess.run(
             ["beet", "--config", resolved_config, "import", "-q", str(source_dir)],
@@ -129,6 +144,8 @@ def import_music_with_beets(source_dir: Path) -> tuple[bool, str]:
             stdin=subprocess.DEVNULL,
             text=True,
             timeout=300,
+            preexec_fn=preexec,
+            env=env,
         )
         if result.returncode == 0:
             return True, result.stdout or "Beets import complete."
@@ -194,16 +211,27 @@ async def upload(
             with zipfile.ZipFile(tmp_path) as zf:
                 zf.extractall(extract_dir)
 
+            if PUID is not None and PGID is not None:
+                # The temp dir and its contents are root-owned; chown them to
+                # the unprivileged user so beets can both read the source files
+                # and unlink them after moving (unlinking requires write
+                # permission on the parent directory).
+                os.chown(tmpdir, PUID, PGID)
+                for dirpath, _, filenames in os.walk(extract_dir):
+                    os.chown(dirpath, PUID, PGID)
+                    for fname in filenames:
+                        os.chown(os.path.join(dirpath, fname), PUID, PGID)
+
             ok, msg = import_music_with_beets(extract_dir)
             if not ok:
                 return JSONResponse({"ok": False, "message": msg})
 
-            chown_music_dir()
-
-            scan_ok, scan_msg = navidrome_rescan()
+            scan_ok, msg = navidrome_rescan()
             final_msg = "Music imported successfully."
             if scan_ok:
                 final_msg = "Music imported successfully. Navidrome rescan triggered."
+            if msg:
+                final_msg = f"{final_msg} {msg}"
             return JSONResponse({
                 "ok": True,
                 "message": final_msg,
