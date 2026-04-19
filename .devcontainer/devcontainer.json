@@ -2,10 +2,14 @@
   "name": "Dropzone Dev",
   "build": {
     "context": "..",
-    "dockerfile": "../Dockerfile"
+    "dockerfile": "../Dockerfile",
+    "args": {
+      "USER_UID": "${localEnv:UID}",
+      "USER_GID": "${localEnv:GID}"
+    }
   },
   "mounts": [
-    "source=${localEnv:HOME}/.claude,target=/root/.claude,type=bind,consistency=cached"
+    "source=${localEnv:HOME}/.claude,target=/home/app/.claude,type=bind,consistency=cached"
   ],
   "workspaceMount": "source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached",
   "workspaceFolder": "/app",
@@ -25,6 +29,7 @@
     "PUID": "1000",
     "PGID": "1000"
   },
+  "remoteUser": "app",
   "postCreateCommand": "mkdir -p /app/instance/music /app/instance/inbox /app/instance/snippets /app/instance/beets",
   "postStartCommand": "uvicorn main:app --host 0.0.0.0 --port 8000 --reload",
   "customizations": {
