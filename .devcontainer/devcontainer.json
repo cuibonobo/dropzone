@@ -9,9 +9,6 @@
   ],
   "workspaceMount": "source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached",
   "workspaceFolder": "/app",
-  "features": {
-    "ghcr.io/devcontainers/features/git:1": {}
-  },
   "forwardPorts": [8000],
   "remoteEnv": {
     "DROPZONE_USER": "admin",

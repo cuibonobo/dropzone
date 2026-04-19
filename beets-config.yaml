@@ -13,10 +13,13 @@ import:
   resume: no                  # never prompt to resume a previous import session
   duplicate_action: skip      # silently skip tracks already in the library
 
-plugins: []
+plugins: [inline]
+
+item_fields:
+  disc_prefix: str(disc) + '-' if disctotal > 1 else ''
 
 # File path template: Artist/Album/[Disc-]Track Title
 paths:
-  default: $albumartist/$album/%if{$gt{$disctotal,1},$disc-}$track $title
+  default: $albumartist/$album/$disc_prefix$track $title
   singleton: Non-Album/$artist/$title
-  comp: Compilations/$album/%if{$gt{$disctotal,1},$disc-}$track $title
+  comp: Compilations/$album/$disc_prefix$track $title
