@@ -15,8 +15,8 @@ import:
 
 plugins: []
 
-# File path template: Artist/Album/Track. Artist.mp3
+# File path template: Artist/Album/[Disc-]Track Title
 paths:
-  default: $albumartist/$album/$track $title
+  default: $albumartist/$album/%if{$gt{$disctotal,1},$disc-}$track $title
   singleton: Non-Album/$artist/$title
-  comp: Compilations/$album/$track $title
+  comp: Compilations/$album/%if{$gt{$disctotal,1},$disc-}$track $title
