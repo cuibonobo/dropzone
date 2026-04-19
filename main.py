@@ -229,7 +229,7 @@ async def upload(
             final_msg = "Music imported successfully."
             if scan_ok:
                 final_msg = "Music imported successfully. Navidrome rescan triggered."
-            if msg:
+            elif msg:
                 final_msg = f"{final_msg} {msg}"
             return JSONResponse({
                 "ok": True,
