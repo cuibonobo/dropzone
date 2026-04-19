@@ -53,7 +53,7 @@ automatically on every push to `main`.
 
 Update the image name in `docker-compose.yml`:
 ```yaml
-image: ghcr.io/cuibonobo/dropzone:latest
+image: ghcr.io/soggybaskets/dropzone:latest
 ```
 
 ## Development

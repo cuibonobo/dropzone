@@ -1,6 +1,6 @@
 services:
   dropzone:
-    image: ghcr.io/cuibonobo/dropzone:latest
+    image: ghcr.io/soggybaskets/dropzone:latest
     # build: .   # uncomment to build locally instead
     container_name: dropzone
     restart: unless-stopped

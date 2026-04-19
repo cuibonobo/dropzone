@@ -2,11 +2,7 @@
   "name": "Dropzone Dev",
   "build": {
     "context": "..",
-    "dockerfile": "../Dockerfile",
-    "args": {
-      "USER_UID": "${localEnv:UID}",
-      "USER_GID": "${localEnv:GID}"
-    }
+    "dockerfile": "../Dockerfile"
   },
   "mounts": [
     "source=${localEnv:HOME}/.claude,target=/home/app/.claude,type=bind,consistency=cached"
